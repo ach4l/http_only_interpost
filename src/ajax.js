@@ -1,5 +1,11 @@
 export const serverURL = "http://192.168.43.73:5000/";
 
+export async function getWikitravelAsset(assetPath) {
+  console.log('Sending GET Request for wikitravel for', assetPath);
+  const response = await fetch(serverURL+assetPath)
+  return response;
+}
+
 // Function to add request to the server
 export async function sendRequest(request) {
   const URL = serverURL + "add_request"
@@ -70,3 +76,4 @@ export async function getBackupRequests(userId) {
 
   return resp;
 }
+

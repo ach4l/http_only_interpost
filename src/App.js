@@ -3,10 +3,11 @@ import WebContext from "./components/WebContext";
 import MainLayout from "./components/MainLayout";
 import * as ajax from "./ajax";
 import 'typeface-roboto';
+import "./App.css";
 
 // Screens
 import SelectSourceScreen from "./screens/SelectSourceScreen";
-// import RequestContentScreen from "./screens/RequestContentScreen";
+import RequestContentScreen from "./screens/RequestContentScreen";
 import RequestsListScreen from "./screens/RequestsListScreen";
 import AddRequestScreen from "./screens/AddRequestScreen";
 
@@ -23,7 +24,7 @@ export default function App() {
   const SCREENS = {
     SelectSource: { screen: SelectSourceScreen, title: "WebBackPack" },
     RequestsList: { screen: RequestsListScreen, title: source },
-    // RequestContent: { screen: RequestContentScreen, title: "" },
+    RequestContent: { screen: RequestContentScreen, title: currentRequest.query },
     AddRequest: { screen: AddRequestScreen, title: "Add " + source }
   }
 

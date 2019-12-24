@@ -72,7 +72,7 @@ export default function AddRequestScreen(props) {
   if (context.source === "Wikitravel") {
     levelSelect = (
       <FormControl>
-        <InputLabel id="demo-simple-select-label">Label</InputLabel>
+        <InputLabel id="demo-simple-select-label">Level</InputLabel>
         <Select
           labelId="demo-simple-select-label"
           id="demo-simple-select"
@@ -108,6 +108,7 @@ const styles = {
   screen: {
     display: "flex",
     flexDirection: "column",
+    alignItems: "center",
     height: 200,
     minHeight: "50%",
     padding: "10%",
