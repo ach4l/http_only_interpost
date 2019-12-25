@@ -25,9 +25,12 @@ export default function AddRequestScreen(props) {
 
     if (context.source === "Wikitravel") mode = level;
 
+    const nextRequestId =  context.getNextRequestId();
+    console.log("NextRequestId", nextRequestId);
+
     const request = {
       user_id: context.userId,
-      id: context.nextReqId,
+      id: context.getNextRequestId(),
       query,
       status: "saved",
       type: context.source,
@@ -36,7 +39,6 @@ export default function AddRequestScreen(props) {
 
     // Add request to context
     context.dispatchAllRequests({ type: "add", newReq: request });
-    context.setNextReqId(val => val + 1);
 
     // Go back
     context.setCurrentScreen("RequestsList");

@@ -1,9 +1,10 @@
-import React, {useReducer, useState, useEffect, useRef} from "react";
+import React, { useReducer, useState, useEffect, useRef } from "react";
 import WebContext from "./components/WebContext";
 import MainLayout from "./components/MainLayout";
 import * as ajax from "./ajax";
 import 'typeface-roboto';
 import "./App.css";
+import * as dbCalls from "./db";
 
 // Screens
 import SelectSourceScreen from "./screens/SelectSourceScreen";
@@ -15,7 +16,6 @@ export default function App() {
 
   // Define values for context
   const [allRequests, dispatchAllRequests] = useReducer(reducerReqs, []);
-  const [nextReqId, setNextReqId] = useState(1);
   const [source, setSource] = useState(null);
   const [currentScreen, setCurrentScreen] = useState("SelectSource");
   const [currentRequest, setCurrentRequest] = useState({});
@@ -28,13 +28,15 @@ export default function App() {
     AddRequest: { screen: AddRequestScreen, title: "Add " + source }
   }
 
-  // Ask for information for saved requests whenever 
+  function getNextRequestId() {
+    if (allRequests.length > 0) return Math.max(...allRequests.map(req => req.id)) + 1;
+    return 1;
+  }
 
   const context = {
     userId: "Parvati",
     sources: ["Youtube", "Wikitravel"],
-    nextReqId,
-    setNextReqId,
+    getNextRequestId,
     allRequests,
     dispatchAllRequests,
     currentScreen,
@@ -45,6 +47,27 @@ export default function App() {
     currentRequest,
     videoRef,
   }
+
+  // ------------------------------------
+  // Effects for IndexedDb Manipulation
+  // ------------------------------------
+
+  // Initialize IndexedDB and load requests data
+  useEffect(() => {
+    async function initializeRequests() {
+      const requests = await dbCalls.initializeDB();
+      dispatchAllRequests({type: "init-requests", requests });
+    }
+    initializeRequests();
+  }, []);
+
+  // Whenever allRequests change, backup all info about requests
+  useEffect(() => {
+    if (allRequests.length > 0) dbCalls.putAllRequestElements(allRequests);
+  }, [allRequests]);
+
+  // ------------------------------------
+  // ------------------------------------
 
   // Send saved requests to server
   useEffect(() => {
@@ -93,6 +116,7 @@ export default function App() {
   });
 
 
+
   // Main content definition
   const MainContent = SCREENS[currentScreen].screen;
 
@@ -112,19 +136,21 @@ function reducerReqs(reqs, action) {
       return [...reqs, action.newReq];
     case "remove":
       return reqs.filter(req => req.id !== action.reqId);
+    case "init-requests":
+      return [...action.requests];
     case "updateReceivedServer":
-      console.log("updating from serverRequest", action.serverRequest);
+      // console.log("updating from serverRequest", action.serverRequest);
       const newRequest = { ...reqs.filter(req => req.id === action.serverRequest.id)[0] };
       newRequest.server_request_id = action.serverRequest.server_request_id;
       newRequest.status = "receivedServer";
       return reqs.map(req => req.id === newRequest.id ? newRequest : req);
     case "updateDownloaded":
-      console.log("Updating download", action.serverResponse);
+      // console.log("Updating download", action.serverResponse);
       const newRequest2 = { ...reqs.filter(req => req.server_request_id === action.serverResponse.server_request_id)[0] };
       newRequest2.status = "downloadedServer";
       newRequest2.links = action.serverResponse.links;
       // console.log(reqs.map(req => req.id === newRequest2.id ? newRequest2 : req));
-      console.log(action.serverResponse.server_request_id)
+      // console.log(action.serverResponse.server_request_id)
       return reqs.map(req => (
         req.server_request_id === action.serverResponse.server_request_id ?
           newRequest2 :
