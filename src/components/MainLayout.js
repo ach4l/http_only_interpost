@@ -1,7 +1,7 @@
 import React, { useContext } from "react";
 import Colors from "../constants/Colors";
 import WebContext from "./WebContext";
-import { mainIconStyle, videoIconStyle, ICON_SIZE } from "../constants/iconStyles";
+import { mainIconStyle, ICON_SIZE } from "../constants/iconStyles";
 
 // Import Icons
 import Add from "@material-ui/icons/Add";

@@ -5,13 +5,20 @@ import RequestDisplay from "../components/RequestDisplay";
 export default function RequestsListScreen(props) {
   const context = useContext(WebContext);
 
+  function isDownloadedRequest(req) {
+    return (req.type === "Youtube" ? 
+      req.status === "downloadedLocally" : 
+      req.status === "downloadedServer");
+  }
+
+
   let reqElements = context.allRequests
     .filter(req => req.type === context.source)
     .map(req => (
       <RequestDisplay
         request={req}
         key={req.id}
-        downloaded={req.status.indexOf("downloaded")>=0}
+        downloaded={isDownloadedRequest(req)}
       />
     ));
 
@@ -22,7 +29,4 @@ export default function RequestsListScreen(props) {
   );
 
 }
-
-
-const styles = {};
 

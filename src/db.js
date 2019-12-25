@@ -28,7 +28,23 @@ export async function putRequestElement(request) {
 }
 
 export async function putContentElement(requestId, content) {
-  console.log("Adding content for requestId", requestId);
-  const response = await db.content.put({id: requestId, content});
+  console.log("Adding content for requestId", requestId, content);
+  const response = await db.content.put({ id: requestId, content });
   console.log("response", response);
+}
+
+export async function removeRequestElement(requestId) {
+  const response = await db.requests.delete(requestId);
+  return response;
+
+}
+
+export async function removeContent(requestId) {
+  const response = await db.content.delete(requestId);
+  return response;
+}
+
+export async function getVideo(requestId) {
+  const response = await db.content.where("id").equals(requestId).toArray();
+  return response[0].content;
 }

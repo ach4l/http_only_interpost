@@ -1,4 +1,4 @@
-import React, { useReducer, useState, useEffect, useRef } from "react";
+import React, { useReducer, useState, useEffect } from "react";
 import WebContext from "./components/WebContext";
 import MainLayout from "./components/MainLayout";
 import * as ajax from "./ajax";
@@ -19,7 +19,6 @@ export default function App() {
   const [source, setSource] = useState(null);
   const [currentScreen, setCurrentScreen] = useState("SelectSource");
   const [currentRequest, setCurrentRequest] = useState({});
-  const videoRef = useRef();
 
   const SCREENS = {
     SelectSource: { screen: SelectSourceScreen, title: "WebBackPack" },
@@ -45,7 +44,6 @@ export default function App() {
     setSource,
     setCurrentRequest,
     currentRequest,
-    videoRef,
   }
 
   // ------------------------------------
@@ -56,7 +54,7 @@ export default function App() {
   useEffect(() => {
     async function initializeRequests() {
       const requests = await dbCalls.initializeDB();
-      dispatchAllRequests({type: "init-requests", requests });
+      dispatchAllRequests({ type: "init-requests", requests });
     }
     initializeRequests();
   }, []);
@@ -115,7 +113,28 @@ export default function App() {
     getContentRequests();
   });
 
+  // Download data for youtube requests.status === downloadedServer
+  // Only when requests modified
+  useEffect(() => {
+    // For the moment, only youtube working
+    async function downloadYoutubeLocally() {
+      const reqs = allRequests
+        .filter(req => req.type === "Youtube" && req.status === "downloadedServer");
 
+      // console.log("downloading following requests", reqs);
+
+      const promises = reqs.map(req => ajax.downloadYoutubeVideo(req));
+      const videos = await Promise.all(promises);
+      // console.log("videos", videos);
+
+      // Add each video to indexedDB
+      reqs.forEach((req, counter) => dbCalls.putContentElement(req.id, videos[counter]));
+
+      // Change status of the request
+      reqs.forEach(req => dispatchAllRequests({ type: "updateDownloadedLocally", request: req }));
+    }
+    downloadYoutubeLocally();
+  }, [allRequests]);
 
   // Main content definition
   const MainContent = SCREENS[currentScreen].screen;
@@ -139,23 +158,23 @@ function reducerReqs(reqs, action) {
     case "init-requests":
       return [...action.requests];
     case "updateReceivedServer":
-      // console.log("updating from serverRequest", action.serverRequest);
       const newRequest = { ...reqs.filter(req => req.id === action.serverRequest.id)[0] };
       newRequest.server_request_id = action.serverRequest.server_request_id;
       newRequest.status = "receivedServer";
       return reqs.map(req => req.id === newRequest.id ? newRequest : req);
     case "updateDownloaded":
-      // console.log("Updating download", action.serverResponse);
       const newRequest2 = { ...reqs.filter(req => req.server_request_id === action.serverResponse.server_request_id)[0] };
       newRequest2.status = "downloadedServer";
       newRequest2.links = action.serverResponse.links;
-      // console.log(reqs.map(req => req.id === newRequest2.id ? newRequest2 : req));
-      // console.log(action.serverResponse.server_request_id)
       return reqs.map(req => (
         req.server_request_id === action.serverResponse.server_request_id ?
           newRequest2 :
           req
       ));
+    case "updateDownloadedLocally":
+      const newRequest3 = { ...action.request };
+      newRequest3.status = "downloadedLocally";
+      return reqs.map(req => req.id === newRequest3.id ? newRequest3 : req);
     default:
       throw Error("error in reducerReqs, App.js");
   }

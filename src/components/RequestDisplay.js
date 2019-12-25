@@ -1,7 +1,7 @@
 import React, { useContext } from "react";
 import WebContext from "./WebContext";
 import Delete from "@material-ui/icons/Delete";
-
+import * as dbCalls from "../db";
 
 export default function RequestDisplay(props) {
 
@@ -15,12 +15,11 @@ export default function RequestDisplay(props) {
   }
 
   function removeRequestHandler() {
-    context.dispatchAllRequests(
-      {
-        type: "remove",
-        reqId: props.request.id
-      }
-    );
+    context.dispatchAllRequests({ type: "remove", reqId: props.request.id })
+    dbCalls.removeRequestElement(props.request.id);
+    if (props.request.status === "downloadedLocally") {
+      dbCalls.removeContent(props.request.id);
+    }
   }
 
   return (
